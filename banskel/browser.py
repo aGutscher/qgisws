@@ -16,39 +16,47 @@ from PyQt4.QtGui import QFileDialog
 from PyQt4.QtCore import QDir
 from PyQt4.QtCore import pyqtSignal
 
+from browse_dialog_ui import Ui_BrowseDialog
+from projector import count_lines,transform_csv
+
 # -----------------------------------------------------------------------------
 # classes
 # -----------------------------------------------------------------------------
-class Browser(QDialog, ban_ui.Ui_Browser):
+class Browser(QDialog, Ui_BrowseDialog):
 
     # -------------------------------------------------------------------------
     # public methods
     # -------------------------------------------------------------------------
     # -------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, app):
         QDialog.__init__(self)
         self.setupUi(self)
-
+        self.app = app
         # init attributes
-        # TODO
-
-        # custom settings for widgets
-        # TODO
-
-        # connect
-        # TODO
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        
+        self.filename = "/home/vagrant/Bureau/fork/qgisws/banskel/bano-75.csv"
+        
+        self.browseButton.clicked.connect(self.__browse)
+        self.buttonBox.button(QDialogButtonBox.Ok).clicked.connect(self.__ok)
+        self.buttonBox.button(QDialogButtonBox.Cancel).clicked.connect(app.quit)
 
     # -------------------------------------------------------------------------
     @property
     def filename(self):
-        # TODO
-        pass
+        return self.__filename
 
     # -------------------------------------------------------------------------
     @filename.setter
     def filename(self, filename):
-        # TODO
-        pass
+        if os.path.isfile(filename):
+            self.__filename = filename
+            self.urlEdit.setText(self.__filename)
+            self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        else:
+            self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False) 
+            msg = QMessageBox()
+            msg.setText("Fichier introuvable")
 
     # -------------------------------------------------------------------------
     # private methods
@@ -66,9 +74,12 @@ class Browser(QDialog, ban_ui.Ui_Browser):
     # -------------------------------------------------------------------------
     def __ok(self):
         # TODO
+        #count_lines(self.__filename)
+        transform_csv(self.__filename)
+        #projector = Projector(self.filename)
         pass
 
     # -------------------------------------------------------------------------
     def __browse(self):
-        # TODO
-        pass
+        self.filename = QFileDialog.getOpenFileName(self,"Sélectionner le fichier")
+        
