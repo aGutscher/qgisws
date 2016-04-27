@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function, absolute_import, division
+#from __future__ import unicode_literals, print_function, absolute_import, division
 
 # -----------------------------------------------------------------------------
 # imports
@@ -21,7 +21,7 @@ def count_lines(filename):
     with open(filename, "r+") as f:
         for line in f:
             i+=1
-    print(i)
+    return i-1
     
 
 # -----------------------------------------------------------------------------
@@ -30,7 +30,7 @@ def reproject(x, y, source_srid, dest_srid):
     sp = Proj("+init=EPSG:{}".format(source_srid))
     dp = Proj("+init=EPSG:{}".format(dest_srid))
     
-    transform(sp,dp,x,y)
+    return transform(sp,dp,x,y)
 
    
 
@@ -44,16 +44,16 @@ def transform_csv(filename, separator=','):
                 pass
             else:
                 tbl = line.split(separator)
-                reproject(tbl[7],tbl[6],"4326","21781")
+                yield reproject(tbl[7],tbl[6],"4326","21781")
             
 
 # -----------------------------------------------------------------------------
 # classes
 # -----------------------------------------------------------------------------
 class Projector(QThread):
-    """
-    TODO : declare signals
-    """
+    progressSignal = pyqtSignal()
+    finishSignal = pyqtSignal()
+        
     def __init__(self):
         super(Projector, self).__init__()
         self.filename = ""
@@ -62,6 +62,12 @@ class Projector(QThread):
         self.filename = filename
 
     def run(self):
-        # TODO
-        #count_lines(self.filename)
-        pass
+        generator = transform_csv(self.filename)
+        
+        for result in generator:
+            print(result)
+            self.progressSignal.emit()
+            
+        self.finishSignal.emit()
+
+

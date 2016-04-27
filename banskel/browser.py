@@ -17,7 +17,8 @@ from PyQt4.QtCore import QDir
 from PyQt4.QtCore import pyqtSignal
 
 from browse_dialog_ui import Ui_BrowseDialog
-from projector import count_lines,transform_csv
+from projector import Projector, count_lines
+from progressbar import Progress
 
 # -----------------------------------------------------------------------------
 # classes
@@ -41,6 +42,9 @@ class Browser(QDialog, Ui_BrowseDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).clicked.connect(self.__ok)
         self.buttonBox.button(QDialogButtonBox.Cancel).clicked.connect(app.quit)
 
+        self.projector = Projector()
+        self.progress = Progress()
+
     # -------------------------------------------------------------------------
     @property
     def filename(self):
@@ -62,22 +66,25 @@ class Browser(QDialog, Ui_BrowseDialog):
     # private methods
     # -------------------------------------------------------------------------
     # -------------------------------------------------------------------------
-    def __in_progress(self, line):
-        # TODO
-        pass
+    def __in_progress(self):
+        self.progress.progressBar.setValue(self.progress.progressBar.value()+1)
 
     # -------------------------------------------------------------------------
     def __compute_done(self):
-        # TODO
-        pass
+        self.progress.close()
 
     # -------------------------------------------------------------------------
     def __ok(self):
-        # TODO
-        #count_lines(self.__filename)
-        transform_csv(self.__filename)
-        #projector = Projector(self.filename)
-        pass
+        self.projector.filename = self.__filename
+        
+        self.projector.progressSignal.connect(self.__in_progress)
+        self.projector.finishSignal.connect(self.__compute_done)
+        self.projector.start()
+        
+        self.progress.progressBar.setRange(0,count_lines(self.__filename))
+        self.progress.progressBar.setValue(0)
+        self.progress.show()
+
 
     # -------------------------------------------------------------------------
     def __browse(self):
